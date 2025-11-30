@@ -1,0 +1,16 @@
+chainlit
+google-adk
+google-genai
+python-dotenv
+elevenlabs
+pymupdf
+python-docx
+ddgs
+numpy
+asyncpg
+SQLAlchemy
+aiohttp
+azure-identity 
+azure-storage-file-datalake 
+greenlet
+azure-ai-inference
