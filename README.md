@@ -1,6 +1,6 @@
 # Agent ADK with Chainlit — Learning Guide
 
-This project is a Chainlit application that integrates Google ADK agents, MCP tools, document processing, audio input, and a SQLAlchemy data layer backed. Use this guide to understand the architecture, configure the environment, and extend features.
+This project is a `Chainlit` application that integrates `Google ADK` agents, `MCP tools`, document processing, audio input, and a `SQLAlchemy` data layer backed. Use this guide to understand the architecture, configure the environment, and extend features.
 
 ## What You'll Need
 
@@ -134,25 +134,48 @@ STORAGE_KEY=your-storage-key
 
 **User Authentication**
 
+Authentication is delegated to external `OAuth` providers such as `Auth0` and `GitHub`. The platform does not manage or store passwords. `OAuth` handles identity securely, and `Chainlit` processes login callbacks through a lightweight authentication handler.
+
 ![Login](public/gif/user-authentication.gif)
 
 **Dashboard Overview**
+
+The interface is the `Chainlit` conversational workspace an interactive chat environment rather than a traditional analytics dashboard. Users can ask questions, upload documents, perform live web search, and interact with multiple AI agents through an intuitive, streaming-enabled interface powered by Chainlit’s event system.
 
 ![Dashboard](public/gif/dashboard-overview.gif)
 
 **Visual Analysis**
 
+The visual analysis feature is powered by the `DocumentProcessor` class, which uses Google’s Gemini Vision API to perform optical character recognition (`OCR`) and extract meaningful content from uploaded image files. This enables the assistant to understand text, tables, and visual elements embedded within images for downstream processing and summarization.
+
 ![Image Understanding](public/gif/document-intelligence.gif)
 
 **Document Intelligence**
+
+Document intelligence is handled entirely by the `DocumentProcessor` class, which automatically:
+
+- Detects and validates uploaded files
+- Extracts text and media from multiple formats (`PDF`, `DOCX`, `TXT`, and `images`)
+- Applies `OCR` on `images` using Gemini Vision
+- Generates AI-powered, structured summaries
+
+These summaries are stored for future retrieval, allowing users to ask accurate, context-grounded questions based on their documents.
 
 ![Document Processor](public/gif/document-processor.gif)
 
 **Web Content Extraction**
 
+Web content extraction is performed by the `search_agent`, which integrates with `Tavily MCP tools` through the Model Context Protocol (`MCP`). This agent can:
+
+- Run live web searches
+- Scrape and extract text from provided URLs
+- Return relevant content to augment AI responses
+
 ![Web Extraction](public/gif/web-scraping.gif)
 
 **Advanced Web Search**
+
+Advanced web search enhances the system by adding intent aware, context driven search capabilities via `MCP`. The root agent intelligently determines when a query requires external information, then instructs `search_agent` to gather and extract the most relevant web content. This allows the assistant to deliver precise and timely answers backed by real-world sources instead of static model knowledge alone.
 
 ![Web Search](public/gif/web-search.gif)
 
@@ -317,11 +340,11 @@ ALTER TABLE elements ADD COLUMN "autoPlay" BOOLEAN DEFAULT false;
 
 ## Dependencies
 
-- Declared in `pyproject.toml` and `requirements.txt` (Chainlit, Google ADK/GenAI, ElevenLabs, PyMuPDF, python-docx, numpy, asyncpg, SQLAlchemy, aiohttp, Azure SDKs, greenlet).
+- Declared in `pyproject.toml` and `requirements.txt` (`Chainlit`, `Google ADK`/`GenAI`, `ElevenLabs`, `PyMuPDF`, `python-docx`, `numpy`, `asyncpg`, `SQLAlchemy`, `aiohttp`, `greenlet`).
 
 ## License
 
-- This project is licensed under the [MIT License][LICENSE] - free to use, modify, and distribute.
+- This project is licensed under the [MIT License](LICENSE) - free to use, modify, and distribute.
 
 ## References
 
