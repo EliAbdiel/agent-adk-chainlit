@@ -1,18 +1,20 @@
 import chainlit as cl
+from google import genai
 from mcp import ClientSession
-from typing import Dict, Optional
+from google.genai import types
 from chainlit.types import ThreadDict
-from src.config.common import COMMANDS
+from typing import Dict, Optional, Any
 from src.ui.commands import command_list
 from src.logs.logger import setup_logger
 from src.ui.chat_resume import resume_chats
 from src.ui.chat_starters import list_of_starter
+from src.config.common import COMMANDS, GEMINI_API_KEY, DEFAULT_MODEL
 from src.document.document_processor import DocumentProcessor
 from src.database.persistent_data_layer import init_data_layer
-from src.llm.agents.search_agent import call_search_agent, search_agent
 from src.llm.speech.speech_to_text import audio_chunk, audio_transcription
 from src.llm.agents.question_answer_agent import call_qa_agent, root_agent
 from src.llm.agents.utils.session_and_runner import setup_session_and_runner
+from src.llm.agents.search_agent import call_search_agent, search_agent, search_coordinator
 
 
 logger = setup_logger('MAIN')
@@ -26,6 +28,10 @@ def oauth_callback(
 ) -> Optional[cl.User]:
   """Callback function for OAuth authentication."""
   return default_user
+
+@cl.on_shared_thread_view
+async def on_shared_thread_view(thread: Dict[str, Any], current_user: cl.User) -> bool:
+    return True
 
 @cl.on_chat_start
 async def on_chat_start() -> None:
@@ -148,10 +154,24 @@ async def on_message(user_message: cl.Message) -> None:
     user_id=str(user.identifier)
     session_id=str(cl.context.session.thread_id)
     
-    if not user_message or not user_message.content:
+    if not user_message:
         logger.error("Received invalid or None message")
         raise ValueError("Received invalid or None message")
-    
+
+    if not cl.user_session.get("is_thread_renamed", False):
+        thread_name_response = genai.Client(api_key=GEMINI_API_KEY)
+
+        thread_name = thread_name_response.models.generate_content(
+            model=DEFAULT_MODEL,
+            config=types.GenerateContentConfig(   
+                temperature=0.0,
+            ),
+            contents=f"Summarize this query in MAX 8 words for a chat thread name: `{user_message.content[:500]}`",
+        )
+
+        await cl.context.emitter.init_thread(thread_name.text)
+        cl.user_session.set("is_thread_renamed", True)
+
     if user_message.elements:
         logger.info("Processing user message with attached files")
         
@@ -177,6 +197,11 @@ async def on_message(user_message: cl.Message) -> None:
             logger.error("No extracted content to user file")
             raise ValueError("No extracted content to user file")
         
+        if user_message.command == "Summary":
+            logger.info(f"Processing user message: {len(extracted_content)} characters, with command: {user_message.command}")
+            await cl.Message(content=extracted_content).send()
+            return
+
         user_message.content = f"""
         INSTRUCTION:
         {user_message.content}
@@ -185,8 +210,7 @@ async def on_message(user_message: cl.Message) -> None:
         {extracted_content}
         """
 
-        logger.info(f"User Message: {user_message.content}")
-
+        logger.info("Processing user message with qa agent")
         session, runner = await setup_session_and_runner(root_agent, app_name, user_id, session_id)
         answer = await call_qa_agent(runner, session, user_id, user_message.content)
 
@@ -202,9 +226,10 @@ async def on_message(user_message: cl.Message) -> None:
         
         # Calling search agent
         logger.info("Processing user message with search agent")
+
         session, runner = await setup_session_and_runner(search_agent, app_name, user_id, session_id)
         search_content = await call_search_agent(runner, session, user_id, user_message.content)
-        
+
         if not search_content:
             logger.error("No search content")
             raise ValueError("No search content")
