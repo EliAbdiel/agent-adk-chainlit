@@ -315,6 +315,7 @@ class DocumentProcessor:
             self.logger.error(f"Error processing image: {str(e)}")
             raise ValueError(f"Failed to process image: {str(e)}")
             
+    @cl.step(name="process-document", type="tool", show_input=False)
     async def process_document_async(self, filename: str, file_bytes: bytes, file_mime: str) -> str:
         """
         Process a document and extract structured content.
@@ -411,15 +412,16 @@ class DocumentProcessor:
         content = await self.process_document_async(filename=filename, file_bytes=file_bytes, file_mime=file_mime)
         
         return content
-
-    async def summarize_text(self, text: str) -> str:
+    
+    @cl.step(name="summarize-content", type="tool", show_input=False)
+    async def summarize_text(self, content: str) -> str:
         """
         Summarize text using the document processor.
 
         Args:
-            text (str): The text to summarize
+            content (str): The content to summarize
 
         Returns:
             str: Summarized content
         """
-        return await self._clean_and_summarize_text(text=text, filename="Document", doc_type="document")
+        return await self._clean_and_summarize_text(text=content, filename="Document", doc_type="document")

@@ -1,3 +1,4 @@
+import chainlit as cl
 from google.adk.agents import Agent
 from google.adk.tools.agent_tool import AgentTool
 from google.genai import types
@@ -43,6 +44,7 @@ root_agent = Agent(
 )
 
 # Agent Interaction
+@cl.step(name="answer-user-question", type="tool", show_input=False)
 async def call_qa_agent(runner: Runner, session: Session, user_id: str, query: str):
     """
     Call agent async and return final response

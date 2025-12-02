@@ -6,7 +6,7 @@ user_env = []
 session_timeout = 3600
 
 # Duration (in seconds) of the user session expiry
-user_session_timeout = 1296000  # 15 days
+user_session_timeout = 86400 # 1 days
 
 # Enable third parties caching (e.g., LangChain cache)
 cache = false
@@ -39,7 +39,7 @@ auto_tag_thread = true
 edit_message = true
 
 # Allow users to share threads (backend + UI). Requires an app-defined on_shared_thread_view callback.
-allow_thread_sharing = false
+allow_thread_sharing = true
 
 [features.slack]
 # Add emoji reaction when message is received (requires reactions:write OAuth scope)
@@ -98,7 +98,7 @@ name = "assistant"
 # description = ""
 
 # Chain of Thought (CoT) display mode. Can be "hidden", "tool_call" or "full".
-cot = "full"
+cot = "tool_call"
 
 # Specify a CSS file that can be used to customize the user interface.
 # The CSS file can be served from the public directory or via an external link.
@@ -112,7 +112,7 @@ cot = "full"
 # custom_js = "/public/test.js"
 
 # The style of alert boxes. Can be "classic" or "modern".
-alert_style = "classic"
+alert_style = "modern"
 
 # Specify additional attributes for custom JS file
 # custom_js_attributes = "async type = \"module\""

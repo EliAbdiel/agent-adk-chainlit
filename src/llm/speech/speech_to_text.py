@@ -51,6 +51,7 @@ async def process_audio() -> bytes:
 
     return wav_buffer.getvalue()
 
+@cl.step(name="speech-to-text", type="tool", show_input=False)
 async def speech_to_text(audio_file: bytes) -> str:
     """Enhanced transcription with multiple engines and languages"""
     elevenlabs = AsyncElevenLabs(
@@ -60,7 +61,7 @@ async def speech_to_text(audio_file: bytes) -> str:
         file=audio_file,
         model_id="scribe_v1", # Model to use, for now only "scribe_v1" is supported
         tag_audio_events=True, # Tag audio events like laughter, applause, etc.
-        language_code="spa", # Language of the audio file. If set to None, the model will detect the language automatically.
+        # language_code="spa", # Language of the audio file. If set to None, the model will detect the language automatically.
         diarize=True, # Whether to annotate who is speaking
     )
 
