@@ -177,7 +177,13 @@ async def on_message(user_message: cl.Message) -> None:
             logger.error("No extracted content to user file")
             raise ValueError("No extracted content to user file")
         
-        user_message.content += f"\n\n{extracted_content}"
+        user_message.content = f"""
+        INSTRUCTION:
+        {user_message.content}
+        
+        DOCUMENT CONTEXT:
+        {extracted_content}
+        """
 
         logger.info(f"User Message: {user_message.content}")
 

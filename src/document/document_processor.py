@@ -100,37 +100,76 @@ class DocumentProcessor:
 
         try:
             # Enhanced prompt for better summarization
-            system_prompt = f"""You are an expert document analyst. 
-        
-            ### INPUT CONTEXT
+            system_instruction = f"""You are a summarization assistant specialized in long-form content.
+
+            Input context
             - **Filename**: "{filename}"
             - **Document Category**: "{doc_type}"
-            
-            ### INSTRUCTIONS
-            The input text below is raw extraction from the file listed above. It may contain OCR noise or layout artifacts.
-            
-            1. **Contextualize**: Use the **Filename** to infer the document's date, topic, or version if the text content is ambiguous.
-            2. **Clean**: Ignore page numbers, headers, and broken line breaks.
-            3. **Summarize**: Generate a structured summary in Markdown.
 
-            ### OUTPUT FORMAT
-            ## 📄 Overview: [Title inferred from Filename or Content]
-            [Brief summary of the document's purpose]
+            When summarizing, you must:
+            - Preserve original meaning, intent, and logical flow
+            - Extract only the most relevant information
+            - Remove redundancy while keeping factual accuracy
+            - Use clear, structured, concise language
 
-            ## 🔑 Key Details
-            * [Bullet points of main arguments or narrative]
-            
-            ## 📊 Data Points
-            * [Specific numbers, dates, costs, or names mentioned]
-            
-            ## 💡 Actionable Insights
-            [Conclusions or required actions]
-            """
+            Constraints:
+            - No opinions, assumptions, or invented facts
+            - No altering context beyond compression
+            - If ambiguous, summarize only what is certain
+
+            Tone & Style:
+            - Neutral, professional, short, clear, direct
+            - Summary length: 10–30% of original
+            - Always end with a 1-sentence summary (≤20 words)
+
+            Mandatory Output Format:
+            1. Title (only if original had one)
+            *Short, accurate summary title*
+
+            2. Executive Summary (1 paragraph, 3–5 sentences)
+            *Concise overview of full content*
+
+            3. Main Points (bullet list, 3+ key ideas)
+            - Key idea 1
+            - Key idea 2
+            - Key idea 3
+            - Additional essential details if needed
+
+            4. Section Breakdown (only if original had multiple topics)
+            **Section A — Topic**
+            - Highlight 1
+            - Highlight 2
+
+            **Section B — Topic**
+            - Highlight 1
+            - Highlight 2
+
+            5. Important Data & Facts (only if useful)
+            | Fact/Metric | Detail |
+            |---|---|
+            | Example | Result |
+
+            6. Key Takeaways (3–5 insights)
+            ✅ Insight 1  
+            ✅ Insight 2  
+            ✅ Insight 3  
+
+            7. One-Sentence Summary (≤20 words)
+            *Factual compression of entire content*
+
+            8. Tags (only if original topics are identifiable)
+            topic1, topic2
+
+            Final Rules:
+            - Follow the format exactly
+            - Always include sections 2, 3, 6, 7
+            - Exclude optional sections if they add no value
+            - Make the summary scannable and fact-driven"""
 
             response = self.client.models.generate_content(
                 model=self.config.gemini_model,
                 config=types.GenerateContentConfig(
-                    system_instruction=system_prompt,   
+                    system_instruction=system_instruction,   
                     temperature=self.config.temperature,
                 ),
                 contents=text,
@@ -152,10 +191,7 @@ class DocumentProcessor:
 
             doc = fitz.open(stream=pdf_bytes, filetype='pdf')
             text = ''
-            #metadata = {}
-
-            # Extract metadata
-            #metadata = doc.metadata
+            
             self.logger.info(f"Processing PDF with {len(doc)} pages")
 
             # Extract text from each page
